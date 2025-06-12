@@ -2,7 +2,7 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api/proxy-by-device" // All requests go to this proxy function
+      "destination": "/api/proxy-by-device"
     }
   ],
   "functions": {
