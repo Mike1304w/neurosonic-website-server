@@ -1,0 +1,13 @@
+{
+  "rewrites": [
+    {
+      "source": "/(.*)",
+      "destination": "/api/redirect-by-device"
+    }
+  ],
+  "functions": {
+    "api/redirect-by-device.js": {
+      "runtime": "@vercel/node@2.0.0"
+    }
+  }
+}
