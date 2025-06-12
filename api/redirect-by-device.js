@@ -22,7 +22,7 @@ module.exports = async (req, res) => {
 
   // YOUR ACTUAL VERCEl DEPLOYMENT URLs (ensure no trailing slashes here)
   const mobileSiteBaseUrl = 'https://ns-website-mobile.vercel.app';
-  const desktopSiteBaseUrl = 'https://ns-website-desktop-42.vercel.app';
+  const desktopSiteBaseUrl = 'https://vercel.com/neuro-sonic/ns-website-desktop/BrAq2EMncRufeaNN77qb3xjWTqy3';
 
   const targetBaseUrl = isMobile ? mobileSiteBaseUrl : desktopSiteBaseUrl;
 
