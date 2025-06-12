@@ -1,6 +1,7 @@
 // api/proxy-by-device.js
 // Vercel's Node.js runtime includes 'node-fetch' or a compatible global 'fetch' API.
-// If you encounter issues, you might need to 'npm install node-fetch' in your router project
+// If you encounter issues (unlikely for this specific setup on Vercel),
+// you might need to 'npm install node-fetch' in your router project
 // and then explicitly require it: const fetch = require('node-fetch');
 
 module.exports = async (req, res) => {
@@ -11,7 +12,7 @@ module.exports = async (req, res) => {
 
   const userAgent = req.headers['user-agent'];
 
-  // Basic device detection
+  // Basic device detection based on User-Agent header
   const isMobile = Boolean(
     userAgent.match(
       /Android|BlackBerry|iPhone|iPad|iPod|Opera Mini|IEMobile|WPDesktop/i
@@ -37,31 +38,38 @@ module.exports = async (req, res) => {
 
   try {
     // Prepare headers to forward to the target site
+    // We typically remove 'host' as the target server expects its own host
     const headersToForward = { ...req.headers };
-    delete headersToForward.host; // Remove 'host' header as the target server expects its own host
+    delete headersToForward.host;
 
     // --- DEBUG LOGS START ---
     console.log(`[Proxy-Function] Fetching from target...`);
     // --- DEBUG LOGS END ---
 
     const proxyResponse = await fetch(targetUrl, {
-      method: req.method,
-      headers: headersToForward,
+      method: req.method, // Forward the original HTTP method (GET, POST, etc.)
+      headers: headersToForward, // Forward most original headers
+      // Forward the request body for non-GET/HEAD methods (e.g., POST, PUT)
       body: req.method === 'GET' || req.method === 'HEAD' ? undefined : req.body,
-      redirect: 'manual' // Crucial: Prevents fetch from following redirects itself
+      // Crucial for proxying: Prevents 'node-fetch' from following redirects automatically.
+      // We want to handle these manually if needed, or proxy the redirect response itself.
+      redirect: 'manual'
     });
 
     // --- DEBUG LOGS START ---
     console.log(`[Proxy-Function] Received response from target. Status: ${proxyResponse.status}`);
-    // Check if the target URL *itself* is sending a redirect
+    // Check if the target URL *itself* is sending a redirect (e.g., if you access a specific page)
     if (proxyResponse.status >= 300 && proxyResponse.status < 400) {
       console.warn(`[Proxy-Function] Target site returned a redirect (${proxyResponse.status}). Location: ${proxyResponse.headers.get('Location')}`);
     }
     // --- DEBUG LOGS END ---
 
+    // Set the status code of our response to match the target's response
     res.statusCode = proxyResponse.status;
 
+    // Forward all headers from the target response back to the client
     proxyResponse.headers.forEach((value, name) => {
+      // Exclude headers that should not be set by a proxy or are handled automatically by Vercel's platform
       if (!['connection', 'keep-alive', 'content-length', 'transfer-encoding', 'vary'].includes(name.toLowerCase())) {
         res.setHeader(name, value);
       }
@@ -71,6 +79,8 @@ module.exports = async (req, res) => {
     console.log(`[Proxy-Function] Piping response body...`);
     // --- DEBUG LOGS END ---
 
+    // Crucial for performance: pipe the body directly to the client
+    // This streams the content without loading the entire response into memory
     proxyResponse.body.pipe(res);
 
   } catch (error) {
