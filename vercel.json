@@ -2,11 +2,11 @@
   "rewrites": [
     {
       "source": "/(.*)",
-      "destination": "/api/proxy-by-device"
+      "destination": "/api/redirect-by-device"
     }
   ],
   "functions": {
-    "api/proxy-by-device.js": {
+    "api/redirect-by-device.js": {
       "runtime": "@vercel/node@2.0.0"
     }
   }
