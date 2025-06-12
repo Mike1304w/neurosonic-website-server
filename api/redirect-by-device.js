@@ -1,8 +1,7 @@
 // api/proxy-by-device.js
-// Vercel's Node.js runtime includes 'node-fetch' or a compatible global 'fetch' API.
-// If you encounter issues (unlikely for this specific setup on Vercel),
-// you might need to 'npm install node-fetch' in your router project
-// and then explicitly require it: const fetch = require('node-fetch');
+// --- FIX START: Explicitly require node-fetch ---
+const fetch = require('node-fetch');
+// --- FIX END ---
 
 module.exports = async (req, res) => {
   // --- DEBUG LOGS START ---
@@ -38,7 +37,6 @@ module.exports = async (req, res) => {
 
   try {
     // Prepare headers to forward to the target site
-    // We typically remove 'host' as the target server expects its own host
     const headersToForward = { ...req.headers };
     delete headersToForward.host;
 
@@ -47,18 +45,14 @@ module.exports = async (req, res) => {
     // --- DEBUG LOGS END ---
 
     const proxyResponse = await fetch(targetUrl, {
-      method: req.method, // Forward the original HTTP method (GET, POST, etc.)
-      headers: headersToForward, // Forward most original headers
-      // Forward the request body for non-GET/HEAD methods (e.g., POST, PUT)
+      method: req.method,
+      headers: headersToForward,
       body: req.method === 'GET' || req.method === 'HEAD' ? undefined : req.body,
-      // Crucial for proxying: Prevents 'node-fetch' from following redirects automatically.
-      // We want to handle these manually if needed, or proxy the redirect response itself.
       redirect: 'manual'
     });
 
     // --- DEBUG LOGS START ---
     console.log(`[Proxy-Function] Received response from target. Status: ${proxyResponse.status}`);
-    // Check if the target URL *itself* is sending a redirect (e.g., if you access a specific page)
     if (proxyResponse.status >= 300 && proxyResponse.status < 400) {
       console.warn(`[Proxy-Function] Target site returned a redirect (${proxyResponse.status}). Location: ${proxyResponse.headers.get('Location')}`);
     }
@@ -69,7 +63,6 @@ module.exports = async (req, res) => {
 
     // Forward all headers from the target response back to the client
     proxyResponse.headers.forEach((value, name) => {
-      // Exclude headers that should not be set by a proxy or are handled automatically by Vercel's platform
       if (!['connection', 'keep-alive', 'content-length', 'transfer-encoding', 'vary'].includes(name.toLowerCase())) {
         res.setHeader(name, value);
       }
@@ -79,8 +72,7 @@ module.exports = async (req, res) => {
     console.log(`[Proxy-Function] Piping response body...`);
     // --- DEBUG LOGS END ---
 
-    // Crucial for performance: pipe the body directly to the client
-    // This streams the content without loading the entire response into memory
+    // This line should now work correctly because node-fetch provides a Node.js compatible stream
     proxyResponse.body.pipe(res);
 
   } catch (error) {
