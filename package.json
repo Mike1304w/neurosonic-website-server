@@ -1,0 +1,12 @@
+{
+  "name": "neuro-sonic-router",
+  "version": "1.0.0",
+  "description": "Vercel project to proxy mobile/desktop sites.",
+  "main": "api/proxy-by-device.js",
+  "scripts": {
+    "start": "node api/proxy-by-device.js"
+  },
+  "dependencies": {
+    "node-fetch": "^2.6.7"  // Ensure you use a compatible version, 2.x is common for many setups
+  }
+}
