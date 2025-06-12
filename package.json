@@ -7,6 +7,6 @@
     "start": "node api/proxy-by-device.js"
   },
   "dependencies": {
-    "node-fetch": "^2.6.7"  // Ensure you use a compatible version, 2.x is common for many setups
+    "node-fetch": "^2.6.7"
   }
 }
